@@ -75,10 +75,12 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { useUserStore } from "@/store/user";
 import { ElMessage } from "element-plus";
 import type { FormRules } from 'element-plus'
 
 const router = useRouter()
+const userStore = useUserStore ()
 const activeTab = ref('login')
 
 
@@ -95,6 +97,9 @@ const loginRules = {
 const login = async () => {
   await loginRuleFormRef.value.validate()
   ElMessage.success('登录成功！')
+  userStore.setToken(JSON.stringify(loginForm.value))
+  userStore.setrefreshToken(JSON.stringify(loginForm.value))
+  // userStore.setUserInfo(loginForm.value)
   router.push('/home')
 }
 
