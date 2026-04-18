@@ -26,7 +26,7 @@
                     </el-form-item>
                     <div class="btn-box">
                       <el-button type="primary" @click="login">
-                        登录
+                        {{ loading?'登录中':'登录' }}
                       </el-button>
                     </div>
             </el-form>
@@ -62,7 +62,7 @@
                     </el-form-item>
                     <div class="btn-box">
                       <el-button type="primary" @click="register">
-                        注册
+                        {{ registerLoading?'注册中':'注册' }}
                       </el-button>
                     </div>
               </el-form>
@@ -78,9 +78,11 @@ import { useRouter } from "vue-router";
 import { useUserStore } from "@/store/user";
 import { ElMessage } from "element-plus";
 import type { FormRules } from 'element-plus'
-
+import { loginApi,registerApi } from "@/api/auth";
 const router = useRouter()
 const userStore = useUserStore ()
+const loading = ref(false)
+const registerLoading = ref(false)
 const activeTab = ref('login')
 
 
@@ -96,11 +98,18 @@ const loginRules = {
 }
 const login = async () => {
   await loginRuleFormRef.value.validate()
-  ElMessage.success('登录成功！')
-  userStore.setToken(JSON.stringify(loginForm.value))
-  userStore.setrefreshToken(JSON.stringify(loginForm.value))
-  // userStore.setUserInfo(loginForm.value)
-  router.push('/home')
+  try{
+    loading.value = true
+    await loginApi(loginForm.value)
+    ElMessage.success('登录成功！')
+    router.push('/home')
+  }catch(e){
+    loading.value = false
+    ElMessage.error(String(e))
+  }finally{
+    loading.value = false
+  }
+  
 }
 
 // =============== 注册 ===============
@@ -128,13 +137,23 @@ const registerRules = {
 }
 const register = async() => {
   await registerRuleFormRef.value.validate()
-  ElMessage.success('注册成功！')
-  activeTab.value = 'login'
-  router.push('/login')
-  loginForm.value = {
-    username : registerForm.value.username,
-    password : registerForm.value.password
+  try{
+    registerLoading.value = true
+    await registerApi(registerForm.value)
+    ElMessage.success('注册成功！')
+    activeTab.value = 'login'
+    router.push('/login')
+    loginForm.value = {
+      username : registerForm.value.username,
+      password : registerForm.value.password
+    }
+  }catch(e){
+    registerLoading.value = false
+    ElMessage.error(String(e))
+  }finally{
+    registerLoading.value = false
   }
+  
 }
 </script>
 
