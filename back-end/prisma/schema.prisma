@@ -1,0 +1,56 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// 1. 用户表（你之前的）
+model User {
+  id          Int      @id @default(autoincrement())
+  username    String   @db.VarChar(64) @unique
+  password    String   @db.VarChar(255)
+  name        String   @db.VarChar(64)
+  roles       Json
+  status      Int      @db.TinyInt @default(1)
+  create_time DateTime @db.Date
+
+  @@map("users")
+}
+
+// 2. 商品表
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(128)
+  price       Decimal  @db.Decimal(10, 2)
+  status      Int      @db.TinyInt @default(1)
+  create_time DateTime @db.Date
+
+  @@map("products")
+}
+
+// 3. 日志表
+model Log {
+  id      Int      @id @default(autoincrement())
+  user    String   @db.VarChar(64)
+  content String   @db.VarChar(255)
+  time    DateTime @db.DateTime
+
+  @@map("logs")
+}
+
+// 4. 刷新令牌表
+model RefreshToken {
+  token String   @db.VarChar(255) @id
+
+  @@map("refresh_tokens")
+}
+
+
