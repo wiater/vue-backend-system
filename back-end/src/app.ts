@@ -11,5 +11,5 @@ server.setConfig(app => {
 const app = server.build()
 
 app.listen(4000,() => {
-    console.log("Server running on 3000")
+    console.log("Server running on 4000")
 })
