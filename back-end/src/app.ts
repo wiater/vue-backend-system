@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import express from "express";
 import { InversifyExpressServer } from "inversify-express-utils";
-import container from './ioc-container';
+import container from '@/ioc-container';
 const server = new InversifyExpressServer(container)
 
 server.setConfig(app => {
