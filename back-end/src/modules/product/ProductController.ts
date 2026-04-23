@@ -1,18 +1,18 @@
 import { controller, httpPost,httpGet,httpPut,httpDelete } from "inversify-express-utils";
 import { inject } from "inversify";
 import type { Request, Response } from "express";
-import { UserService } from "./UserService";
+import { ProductService } from "./ProductService";
 import { authMiddleware } from "@/middleware/auth.middleware";
-import type { UserItem} from "./types";
-@controller("/api/Users",authMiddleware)
-export class UserController {
-  constructor(@inject(UserService) private UserService: UserService) {}
+import type { ProductItem } from "./types";
+@controller("/api/products",authMiddleware)
+export class ProductController {
+  constructor(@inject(ProductService) private ProductService: ProductService) {}
 
-  // 用户列表
+  // 商品列表
   @httpGet("/")
-  async getUserList(req: Request, res: Response) {
+  async getProductList(req: Request, res: Response) {
     try{
-      const result = await this.UserService.getUserList(req.query)
+      const result = await this.ProductService.getProductList(req.query)
       return res.json({
         code: 200,
         data: result
@@ -27,11 +27,11 @@ export class UserController {
   }
 
   
-  // 用户详情
+  // 商品详情
   @httpGet("/:id")
-  async getUserDetail(req: Request, res: Response) {
+  async getProductDetail(req: Request, res: Response) {
       try {
-          const result = await this.UserService.findUserById(req.params.id)
+          const result = await this.ProductService.findProductById(req.params.id)
           res.json({code: 200,data: result})
       }catch(err:any){
         return res.status(400).json({
@@ -41,12 +41,12 @@ export class UserController {
       }
     }
 
-  // 创建用户
+  // 创建商品
   @httpPost("/")
-  async createUser(req: Request, res: Response) {
+  async createProduct(req: Request, res: Response) {
     try {
-      const data:Omit<UserItem,'id'> = req.body
-      const result = await this.UserService.createUser(data)
+      const data:Omit<ProductItem,'id'> = req.body
+      const result = await this.ProductService.createProduct(data)
       return res.json({code:200,msg:'新增成功',data:result})
     }catch(err:any){
       return res.status(400).json({
@@ -57,11 +57,11 @@ export class UserController {
     
   }
 
-   // 更新用户
+   // 更新商品
   @httpPut("/:id")
-  async updateUser(req: Request, res: Response) {
+  async updateProduct(req: Request, res: Response) {
       try {
-        const result= await this.UserService.updateUser(req.body,req.params.id)
+        const result= await this.ProductService.updateProduct(req.body,req.params.id)
         return res.json({code:200,msg:'更新成功',data:result})
       }catch(err:any){
         return res.status(400).json({
@@ -71,11 +71,11 @@ export class UserController {
       }
   }
 
-   // 删除用户
+   // 删除商品
   @httpDelete("/:id")
-  async deleteUser(req: Request, res: Response) {
+  async deleteProduct(req: Request, res: Response) {
       try {
-        const result= await this.UserService.deleteUser(req.params.id)
+        const result= await this.ProductService.deleteProduct(req.params.id)
         return res.json({code:200,msg:'删除成功',data:result})
       }catch(err:any){
         return res.status(400).json({
@@ -85,11 +85,11 @@ export class UserController {
       }
   }
 
-   // 批量删除用户
+   // 批量删除商品
   @httpPost("/batch-delete")
-  async batchDeleteUser(req: Request, res: Response) {
+  async batchDeleteProduct(req: Request, res: Response) {
       try {
-        const result= await this.UserService.batchDeleteUser(req.body.ids)
+        const result= await this.ProductService.batchDeleteProduct(req.body.ids)
         return res.json({code:200,msg:'删除成功',data:result})
       }catch(err:any){
         return res.status(400).json({
@@ -97,8 +97,9 @@ export class UserController {
           msg:err.msg ||'删除失败',
         })
       }
+    
+    
   }
-
 
   
 }
