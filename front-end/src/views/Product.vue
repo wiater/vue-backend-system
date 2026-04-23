@@ -1,21 +1,12 @@
 <template>
-  <div class="User-container">
+  <div class="product-container">
       <h2>商品管理</h2>
 
       <!-- 搜索 -->
       <div class="search-area">
           <el-row :gutter="8">
               <el-col :span="4">
-                  <el-input v-model="serchForm.username" placeholder="账号" clearable />
-              </el-col>
-              <el-col :span="2">
-                  <el-select
-                      v-model="serchForm.role"
-                      placeholder="全部角色"
-                      clearable>
-                      <el-option label="管理员" value="admin"></el-option>
-                      <el-option label="普通用户" value="user"></el-option>
-                  </el-select>
+                  <el-input v-model="serchForm.name" placeholder="商品名称" clearable />
               </el-col>
               <el-col :span="2">
                   <el-select
@@ -26,11 +17,37 @@
                       <el-option label="禁用" value="0"></el-option>
                   </el-select>
               </el-col>
-              <el-col :span="6">
+              <el-col :span="2">
+                  <el-input
+                      v-model="serchForm.minPrice"
+                      placeholder="最低价"
+                      type="number"/>
+              </el-col>
+              <el-col :span="2">
+                  <el-input
+                      v-model="serchForm.maxPrice"
+                      placeholder="最高价"
+                      type="number"/>
+              </el-col>
+              <el-col :span="5">
+                  <el-space style="display: unset;">
+                      <el-date-picker
+                          v-model="serchForm.dateRange"
+                          type="daterange"
+                          range-separator="-"
+                          start-placeholder="开始日期"
+                          end-placeholder="结束日期"
+                          format="YYYY-MM-DD"
+                          value-format="YYYY-MM-DD"></el-date-picker>
+                  </el-space>
+              </el-col>
+          </el-row>
+          <el-row :gutter="8" style="margin-top: 10px;">
+                <el-col>
                   <el-space>
                       <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
                       <el-button type="warning" @click="handleReset"><el-icon><Refresh /></el-icon>重置</el-button>
-                      <el-button type="success" @click="handleAdd"><el-icon><Plus /></el-icon>新增用户</el-button>
+                      <el-button type="success" @click="handleAdd"><el-icon><Plus /></el-icon>新增商品</el-button>
                       <el-button type="danger" @click="handleBatchDelete"><el-icon><Delete /></el-icon>批量删除</el-button>
                       <el-button type="info" @click="handleExportExcel"><el-icon><Download /></el-icon>导出Excel</el-button>
                   </el-space>
@@ -38,7 +55,7 @@
           </el-row>
       </div>
       <!-- 商品表格 -->
-      <div class="User-table">
+      <div class="product-table">
             <el-card shadow="hover">
                 <el-table
                     :data="tableData"
@@ -50,17 +67,22 @@
                             {{ scope.row.id }}
                         </template>
                     </el-table-column>
-                    <el-table-column label="用户名称" prop="username" width="120">
+                    <el-table-column label="商品名称" prop="name" min-width="80">
                         <template #default="scope">
-                            {{ scope.row.username }}
+                            {{ scope.row.name }}
                         </template>
                     </el-table-column>
-                    <el-table-column label="角色" prop="role" width="120">
+                    <el-table-column label="价格" prop="price">
                         <template #default="scope">
-                            {{ scope.row.roles.includes('admin')?'管理员':'普通用户' }}
+                            {{ scope.row.price }}
                         </template>
                     </el-table-column>
-                    <el-table-column label="状态" prop="status" width="80">
+                    <el-table-column label="创建时间" prop="create_time">
+                        <template #default="scope">
+                            {{ new Date(scope.row.create_time).toLocaleString()}}
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="状态" prop="status">
                         <template #default="scope">
                             <el-tag :type="scope.row.status === 1?'success':'danger'">
                             {{ scope.row.status === 1 ?'启用':'禁用' }}
@@ -92,28 +114,28 @@
         </div>
         <!-- 新增编辑 -->
         <div class="dialog-container">
-            <el-dialog v-model="dialogVisible" :is-edit="isEdit" :title="isEdit ? '编辑用户' : '新增用户'" width="400">
+            <el-dialog v-model="dialogVisible" :is-edit="isEdit" :title="isEdit ? '编辑商品' : '新增商品'" width="400">
                 <el-form :model="form" :rules="rules" ref="ruleFormRef">
-                    <el-form-item label="账号 : " :label-width="formLabelWidth" prop="username">
-                        <el-input v-model="form.username" autocomplete="off" />
+                    <el-form-item label="商品名 : " :label-width="formLabelWidth" prop="name">
+                        <el-input v-model="form.name" autocomplete="off" />
                     </el-form-item>
-                    <el-form-item label="密码: " :label-width="formLabelWidth" prop="password">
-                        <el-input v-model="form.password" type="password" autocomplete="off" />
-                    </el-form-item>
-                    <el-form-item label=":昵称 " :label-width="formLabelWidth" prop="name">
-                        <el-input v-model="form.name"  autocomplete="off" />
-                    </el-form-item>
-                    <el-form-item label="角色 : " :label-width="formLabelWidth" prop="role">
-                        <el-select v-model="form.role" placeholder="请选择用户角色">
-                            <el-option label="管理员" value="admin" />
-                            <el-option label="普通用户" value="user" />
-                        </el-select>
+                    <el-form-item label="价格 : " :label-width="formLabelWidth" prop="price">
+                        <el-input v-model="form.price" type="number" autocomplete="off" />
                     </el-form-item>
                     <el-form-item label="状态 : " :label-width="formLabelWidth" prop="status">
-                        <el-select v-model="form.status" placeholder="请选择用户状态">
+                        <el-select v-model="form.status" placeholder="请选择商品状态">
                             <el-option label="启用" :value="1" />
                             <el-option label="禁用" :value="0" />
                         </el-select>
+                    </el-form-item>
+                    <el-form-item label="创建日期 : " :label-width="formLabelWidth" prop="create_time">
+                        <el-date-picker
+                            v-model="form.create_time"
+                            type="date"
+                            placeholder="Pick a date"
+                            format="YYYY/MM/DD"
+                            value-format="YYYY-MM-DD"
+                        />
                     </el-form-item>
                 </el-form>
                 <template #footer>
@@ -131,27 +153,32 @@
 
 <script setup lang="ts">
   import { ref,onMounted,reactive } from "vue";
-  import * as XLSX from "xlsx";
   import { ElMessage ,ElMessageBox} from "element-plus";
   import { Plus,Search,Refresh,Delete,Download } from '@element-plus/icons-vue'
   import type { FormInstance, FormRules } from 'element-plus'
+  import { useExportExcel } from "@/hooks/useExportExcel";
+  const {exportExcel} = useExportExcel()
 //   import { useVirtualList } from "@/hooks/useVirtualList";
  import {
-      batchDeleteUserApi,
-      createUserApi,
-      deleteUserApi,
-      getUserListApi,
-      updateUserApi,
-      type UserItem
-  } from "@/api/user"; 
+      batchDeleteProductApi,
+      createProductApi,
+      deleteProductApi,
+      getProductListApi,
+      updateProductApi,
+      type ProductItem
+  } from "@/api/product"; 
 // import {createLog} from '@/api/log'
 // import { useUserStore } from "@/store/user";
 
  //搜索表单
 const serchForm = ref({
-    username: "",
-    role: "" as '' | 'admin' | 'user',
+    name: "",
     status: null as number | null,
+    minPrice: null as number | null,
+    maxPrice: null as number | null,
+    dateRange: [] as string[],
+    startDate: "",
+    endDate: "",
 })
 //分页
 const pageNum = ref(1)
@@ -159,36 +186,56 @@ const pageSize = ref(10)
 const total = ref(0)
 
 //列表
-const tableData = ref<UserItem[]>([])
+const tableData = ref<ProductItem[]>([])
 const loading = ref(false)
 const selectedIds = ref<number[]>([])
+// const {
+//   totalHeight,
+//   offsetY,
+//   virtualRows,
+//   onScroll
+// } = useVirtualList(tableData.value, {
+//   rowHeight: 52, // 单行高度，和你css行高统一
+//   viewportHeight: 416, // 容器可视高度
+//   overscan: 4
+// })
+//虚拟列表
+// const scrollTop = ref(0)
+// const rowHeight = ref(0)
+// const viewportHeight = ref(0)
+// const overscan = ref(4)
 
 //弹框
 const dialogVisible = ref(false)
 const formLabelWidth = '80px'
 const isEdit = ref(false)
+interface RuleForm {
+  id: number
+  name: string
+  price: number
+  status: 0 | 1
+  create_time: string
+}
 const ruleFormRef = ref<FormInstance>()
-const form = ref<UserItem>({
+const form = ref({
     id: 0,
-    username: "",
-    password: "",
-    name:"",
-    role:'user' as 'admin' | 'user',
+    name: "",
+    price: '' as unknown as number,
     status: 1 as 0 | 1,
-    create_time:new Date ().toISOString().slice(0, 10)
+    create_time: new Date().toISOString().slice(0, 10)
 })
-const rules = reactive<FormRules<UserItem>>({
-    username: [
-        { required: true, message: '请输入用户名', trigger: 'blur' }
-    ],
+const rules = reactive<FormRules<RuleForm>>({
     name: [
-        { required: true, message: '请输入昵称', trigger: 'blur' }
+        { required: true, message: '请输入商品名', trigger: 'blur' }
     ],
-    role: [
-        { required: true, message: '请选择状态', trigger: 'blur' }
+    price: [
+        { required: true, message: '请输入价格', trigger: 'blur' }
     ],
     status: [
         { required: true, message: '请选择状态', trigger: 'blur' }
+    ],
+    create_time: [
+        { required: true, message: '请选择创建时间', trigger: 'blur' }
     ],
 })
 //新增
@@ -196,10 +243,8 @@ const handleAdd = () => {
     isEdit.value = false
     form.value = {
         id: 0,
-        username: "",
-        name:"",
-        role:'user' as 'admin' | 'user',
-        password:"",
+        name: "",
+        price: '' as unknown as number,
         status: 1 as 0 | 1,
         create_time: new Date().toISOString().slice(0, 10)
     }
@@ -207,20 +252,18 @@ const handleAdd = () => {
 }
 
 //编辑
-const handelEdit = (row:UserItem) => {
+const handelEdit = (row:ProductItem) => {
     isEdit.value = true
     form.value = { ...row }
-    form.value.role = form.value.roles?.[0] as 'admin' | 'user'
-    form.value.password = ''
     dialogVisible.value = true
 }
 const handleCreateOrUpdate = async(formEl: FormInstance | undefined) => {
     if (!formEl) return
     await formEl.validate()
     if (isEdit.value) {
-        await updateUserApi(form.value)
+        await updateProductApi(form.value)
     }else{
-        await createUserApi(form.value)
+        await createProductApi(form.value)
     }
     getList()
     dialogVisible.value = false;
@@ -233,16 +276,17 @@ const handleCreateOrUpdate = async(formEl: FormInstance | undefined) => {
 const getList = async () => {
   try{
     loading.value = true
-    const query = {
-        username: serchForm.value.username,
+    const res = await getProductListApi({
+        name: serchForm.value.name,
         status: serchForm.value.status,
-        role: serchForm.value.role as  'admin' | 'user',
+        minPrice: serchForm.value.minPrice,
+        maxPrice: serchForm.value.maxPrice,
+        startDate: serchForm.value.startDate,
+        endDate: serchForm.value.endDate,
         pageNum: pageNum.value,
         pageSize: pageSize.value
-    }
-    const res = await getUserListApi(query)
+    })
     tableData.value = res.list
-
     total.value = res.total
     loading.value = false
   }catch(e){
@@ -254,15 +298,22 @@ const getList = async () => {
 //搜索
 const handleSearch = () => {
   pageNum.value = 1
+  serchForm.value.startDate = serchForm.value.dateRange[0]
+  serchForm.value.endDate = serchForm.value.dateRange[1]
+  
   getList()
 }
 
 //重置
 const handleReset = () => {
   serchForm.value = {
-    username: "",
+    name: "",
     status: null,
-    role: ''
+    minPrice: null,
+    maxPrice: null,
+    dateRange: [],
+    startDate: "",
+    endDate: "",
   }
   handleSearch()
 }
@@ -270,9 +321,9 @@ const handleReset = () => {
 
 
 //删除
-const handleDelete = (row:UserItem) => {
+const handleDelete = (row:ProductItem) => {
     ElMessageBox.confirm(
-        '确认删除该用户吗?',
+        '确认删除该商品吗?',
         '提示',
         {
           confirmButtonText: '确定',
@@ -280,7 +331,7 @@ const handleDelete = (row:UserItem) => {
           type: 'warning',
         }
       ).then(async () => {
-        await deleteUserApi(row.id)
+        await deleteProductApi(row.id)
         ElMessage({
           type: 'success',
           message: '删除成功!',
@@ -291,9 +342,9 @@ const handleDelete = (row:UserItem) => {
 
 //批量删除
 const handleBatchDelete = () => {
-    if (!selectedIds.value.length) return ElMessage.error('请先勾选用户')
+    if (!selectedIds.value.length) return ElMessage.error('请先勾选商品')
     ElMessageBox.confirm(
-        `确认删除 ${selectedIds.value.length} 个用户吗?`,
+        `确认删除 ${selectedIds.value.length} 个商品吗?`,
         '提示',
         {
           confirmButtonText: '确定',
@@ -301,7 +352,7 @@ const handleBatchDelete = () => {
           type: 'warning',
         }
       ).then(async () => {
-        await batchDeleteUserApi(selectedIds.value)
+        await batchDeleteProductApi(selectedIds.value)
         ElMessage({
           type: 'success',
           message: '删除成功!',
@@ -315,22 +366,6 @@ const handleBatchDelete = () => {
 
 //导出Excel
 
-const exportExcel = async () => {
-    const data = [
-        ['用户ID', '用户名', '角色', '状态', '创建时间'],
-        ...tableData.value.map(item => [
-            item.id,
-            item.username,
-            item.role,
-            item.status ? '启用' : '禁用',
-            item.create_time?.toString().slice(0, 10),
-        ])
-    ]
-    const ws = XLSX.utils.aoa_to_sheet(data)
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, '用户列表')
-    XLSX.writeFile(wb, `用户列表-${new Date().toISOString().slice(0, 10)}.xlsx`)
-}
 const handleExportExcel = () => {
     ElMessageBox.confirm(
         '确认导出Excel吗?',
@@ -341,16 +376,29 @@ const handleExportExcel = () => {
           type: 'warning',
         }
       ).then(async () => {
-        await exportExcel()
-        ElMessage({
-          type: 'success',
-          message: '导出成功!',
+         await exportExcel<ProductItem>(
+            tableData.value,
+            [
+                { label: '商品ID', getValue: (item:ProductItem) => item.id },
+                { label: '商品名称', getValue: (item:ProductItem) => item.name },
+                { label: '价格', getValue: (item:ProductItem) => item.price },
+                { label: '状态', getValue: (item:ProductItem) => item.status ? '启用' : '禁用' },
+                { label: '创建时间', getValue: (item:ProductItem) => item.create_time?.toString().slice(0, 10) }
+            ],
+            
+            '商品列表'
+        )
+        setTimeout(()=>{
+            ElMessage({
+                type: 'success',
+                message: '导出成功!',
+            })
         })
 })
 }
 
 //表格多选事件
-const handleSelectionChange = (rows: UserItem[]) => {
+const handleSelectionChange = (rows: ProductItem[]) => {
     selectedIds.value = rows.map(item => item.id)
 }
 
@@ -370,11 +418,11 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-.User-container{
+.product-container{
     .search-area{
         margin: 10px 0;
     }
-    .User-table{
+    .product-table{
         margin-bottom: 10px;
     }
     .pagination{
@@ -410,4 +458,5 @@ onMounted(() => {
         
     }
 }
+
 </style>

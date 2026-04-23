@@ -22,6 +22,7 @@
                         type="password"
                         autocomplete="off"
                         placeholder="请输入密码"
+                        @keyup.enter="login"
                       />
                     </el-form-item>
                     <div class="btn-box">
@@ -41,7 +42,8 @@
                   status-icon
                   :rules="registerRules"
                   label-width="auto"
-                  class="demo-ruleForm">
+                  class="demo-ruleForm"
+                  @keyup.enter="register">
                     <el-form-item label="用户名:" prop="username">
                       <el-input v-model="registerForm.username" autocomplete="off"  placeholder="请输入账号" /></el-form-item>
                     <el-form-item label="密码:" prop="password">
@@ -78,7 +80,7 @@ import { useRouter } from "vue-router";
 import { useUserStore } from "@/store/user";
 import { ElMessage } from "element-plus";
 import type { FormRules } from 'element-plus'
-import { loginApi,registerApi } from "@/api/auth";
+import { registerApi } from "@/api/auth";
 const router = useRouter()
 const userStore = useUserStore ()
 const loading = ref(false)
@@ -100,7 +102,7 @@ const login = async () => {
   await loginRuleFormRef.value.validate()
   try{
     loading.value = true
-    await loginApi(loginForm.value)
+    await userStore.login(loginForm.value)
     ElMessage.success('登录成功！')
     router.push('/home')
   }catch(e){

@@ -1,17 +1,9 @@
 import { createRouter, createWebHistory } from "vue-router";
-import type { Component } from "vue";
+// import type { Component } from "vue";
 import type {MenuItem  } from "@/types/menu";
 import { useUserStore } from "@/store/user";
 import { usePermissionStore } from "@/store/permission";
 const Layout = () => import('@/views/Layout.vue')
-const Home = () => import('@/views/Home.vue')
-const Product = () => import('@/views/ProductList.vue')
-const User = () => import('@/views/User.vue')
-const Profile = () => import('@/views/Profile.vue')
-const Editor = () => import('@/views/Editor.vue')
-const ResetPwd = () => import('@/views/ResetPwd.vue')
-const Log = () => import('@/views/Log.vue')
-const Chart = () => import('@/views/Chart.vue')
 const NotFound = () => import('@/views/NotFound.vue')
 const Login = () => import('@/views/Login.vue')
 const constantRoutes = [
@@ -26,20 +18,10 @@ const router = createRouter({
 //动态添加路由
 export function addDynamicRoutes(menus:MenuItem[]){
     const routes = menus.map(menu => {
-        const compMap:Record<string,()=>Promise<Component>> = {
-            Home,
-            Product,
-            User,
-            Profile,
-            Editor,
-            ResetPwd,
-            Log,
-            Chart
-        }
         return {
             path:menu.path,
             name:menu.name,
-            component:compMap[menu.name!] || Home,
+            component:() => import(`@/views/${menu.name}.vue`),
             meta:menu.meta
         }
     })
@@ -59,21 +41,20 @@ export function addDynamicRoutes(menus:MenuItem[]){
 router.beforeEach(async (to,_from,next) => {
     const userStore = useUserStore()
     //未登录
-    if(!userStore.token){
+    if(!userStore.accessToken){
         //在登录界面就不动
-        if(to.path === '/login') return next()
+        if(to.path === '/login')  next()
         //不在登录界面就记录下想去的path，然后跳转登录界面
         localStorage.setItem('redirectPath',to.fullPath)
         next('/login')
     }
 
     //登录
-    if(to.path === '/login') return next ('/home')
+    if(to.path === '/login')  next ('/home')
     const permissionStore = usePermissionStore()
     if(!permissionStore.menus.length){
         try{
             await permissionStore.fetchMenus()
-            console.log(permissionStore.menus)
             addDynamicRoutes(permissionStore.menus)
             next(to.fullPath)
         }catch{
