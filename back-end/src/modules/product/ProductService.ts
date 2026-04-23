@@ -1,6 +1,7 @@
 import { injectable } from "inversify";
 import { prisma } from "@/prisma";
 import type { ProductItem } from "./types";
+import * as XLSX from 'xlsx'
 @injectable()
 export class ProductService {
   constructor() {}
@@ -107,7 +108,7 @@ export class ProductService {
     if (!product) return Promise.reject({ code: 404, msg: "商品不存在" });
     return prisma.product.delete({ where: { id } });
   }
-
+  //批量删除
   async batchDeleteProduct(ids: unknown) {
     let newIds = Array.isArray(ids) ? ids.map((i) => Number(i)) : [];
     if (!newIds.length)
@@ -115,4 +116,48 @@ export class ProductService {
     const idSet = Array.from(new Set(newIds));
     return prisma.product.deleteMany({ where: { id: { in: idSet } } });
   }
+
+  // 新增 导出excel
+  async exportProduct(){
+    //查询全部商品
+    const products = await prisma.product.findMany()
+    //格式化返回给前端的数据
+    return products.map(item => ({
+      商品ID:item.id,
+      商品名称:item.name,
+      商品价格:item.price,
+      商品状态:item.status === 1 ? '启用':'禁用',
+      创建时间:item.create_time.toLocaleString()
+    }))
+  }
+
+  //新增：导入excel
+  async importProduct(buffer:Buffer) {
+    //解析excel文件
+    const workbook = XLSX.read(buffer,{type:'buffer'})
+    const sheet = workbook.Sheets[workbook.SheetNames[0]!]
+    const data = XLSX.utils.sheet_to_json(sheet!) as any []
+    // console.log('data',data)
+    // 批量校验+格式化数据
+    const validData = data.filter(item => item.商品名称 && item.商品价格).map(item =>({
+      name:item.商品名称,
+      price:Number(item.商品价格),
+      status:item.商品状态 === '启用'? 1 : 0,
+      create_time:new Date()
+    }))
+
+    if(validData.length === 0){
+      throw{code:400,msg:'Excle内无有效数据，请检查格式'}
+    }
+
+    // 批量创建入库
+    return await prisma.product.createMany({
+      data:validData,
+      skipDuplicates:true // 跳过重复数据
+    })
+  }
+
+
 }
+
+

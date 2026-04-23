@@ -2,8 +2,10 @@ import { controller, httpPost,httpGet,httpPut,httpDelete } from "inversify-expre
 import { inject } from "inversify";
 import type { Request, Response } from "express";
 import { ProductService } from "./ProductService";
-import { authMiddleware } from "@/middleware/auth.middleware";
+import { authMiddleware, type AuthRequest } from "@/middleware/auth.middleware";
 import type { ProductItem } from "./types";
+import { upload } from "@/utils/upload";
+import { roleMiddleware } from "@/middleware/role.middleware";
 @controller("/api/products",authMiddleware)
 export class ProductController {
   constructor(@inject(ProductService) private ProductService: ProductService) {}
@@ -25,6 +27,31 @@ export class ProductController {
       })
     }
   }
+
+  // 新增:导出Excel接口
+  @httpGet('/export',roleMiddleware(['admin']))
+  async export(req:AuthRequest,res:Response){
+      const data = await this.ProductService.exportProduct()
+      res.json({code:200,data})
+  }
+
+  // 新增导入Excel 
+
+  @httpPost('/import',upload.single('file'),roleMiddleware(['admin']))
+  async import (req:AuthRequest,res:Response){
+    try{
+      const buffer = req.file?.buffer
+      if(!buffer) throw {code:400,msg:'请上传Excel文件'}
+      const result = await this.ProductService.importProduct(buffer)
+      return res.json({
+        code:200,
+        msg:`导入成功,共新增${result.count}条数据`
+      })
+    }catch(err:any){
+       return res.json({code:err.code || 400,msg:err.msg || '导入失败'})
+    }
+  }
+
 
   
   // 商品详情

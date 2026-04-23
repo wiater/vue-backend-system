@@ -49,7 +49,15 @@
                       <el-button type="warning" @click="handleReset"><el-icon><Refresh /></el-icon>重置</el-button>
                       <el-button type="success" @click="handleAdd"><el-icon><Plus /></el-icon>新增商品</el-button>
                       <el-button type="danger" @click="handleBatchDelete"><el-icon><Delete /></el-icon>批量删除</el-button>
-                      <el-button type="info" @click="handleExportExcel"><el-icon><Download /></el-icon>导出Excel</el-button>
+                      <el-button type="success" @click="handleExportExcel"><el-icon><Download /></el-icon>导出Excel</el-button>
+                      <!-- 导入EXcel -->
+                      <el-upload 
+                        action=""
+                        :auto-upload="false"
+                        :on-change="handleUploadExcel"
+                        accept=".xlsx,.xls">
+                        <el-button type="warning"><el-icon><Upload /></el-icon>导入Excel</el-button>
+                    </el-upload>
                   </el-space>
               </el-col>
           </el-row>
@@ -154,7 +162,7 @@
 <script setup lang="ts">
   import { ref,onMounted,reactive } from "vue";
   import { ElMessage ,ElMessageBox} from "element-plus";
-  import { Plus,Search,Refresh,Delete,Download } from '@element-plus/icons-vue'
+  import { Plus,Search,Refresh,Delete,Download,Upload } from '@element-plus/icons-vue'
   import type { FormInstance, FormRules } from 'element-plus'
   import { useExportExcel } from "@/hooks/useExportExcel";
   import {useWriteLog} from '@/hooks/useWriteLog';
@@ -167,6 +175,7 @@
       deleteProductApi,
       getProductListApi,
       updateProductApi,
+      importProductApi,
       type ProductItem
   } from "@/api/product";
 // import {createLog} from '@/api/log'
@@ -421,6 +430,21 @@ const handleExportExcel = () => {
 })
 }
 
+//导入Excel
+import { type UploadFile } from "element-plus";
+const handleUploadExcel = async (file:UploadFile) => {
+    const rawFile = file.raw
+    //构造formData 上传文件
+    const formData = new FormData()
+    formData.append('file',rawFile!)
+    try{
+        await importProductApi(formData)
+        ElMessage.success('导入成功！')
+        getList()
+    }catch(err){
+        ElMessage.error('导入失败,请检查Excel格式')
+    }
+}
 //表格多选事件
 const handleSelectionChange = (rows: ProductItem[]) => {
     selectedIds.value = rows.map(item => item.id)
@@ -445,6 +469,10 @@ onMounted(() => {
 .product-container{
     .search-area{
         margin: 10px 0;
+        :deep(.el-upload-list)
+            {
+                margin: 0;
+            }
     }
     .product-table{
         margin-bottom: 10px;
@@ -470,6 +498,7 @@ onMounted(() => {
                 padding:var(--el-dialog-padding-primary);
                 border-top:1px solid var(--border-light);
                 border-bottom:1px solid var(--border-light);
+                
                 .el-form-item__content{
                     flex: 0.8;
                     .el-date-editor.el-input, .el-date-editor.el-input__wrapper{

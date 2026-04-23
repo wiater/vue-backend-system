@@ -59,3 +59,8 @@ export async function deleteProductApi(id: number) {
 export async function batchDeleteProductApi(ids: number[]) {
     return request.post('/products/batch-delete', { ids })
 }
+
+// 导入商品(excel)
+export async function importProductApi(formData:FormData) {
+    return request.post('/products/import', formData)
+}
