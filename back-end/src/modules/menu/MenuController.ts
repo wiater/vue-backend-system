@@ -1,8 +1,8 @@
 import "reflect-metadata";
 import { controller, httpGet,} from "inversify-express-utils";
 import type { Request, Response } from "express";
-import {menuList} from "../../menu";
-import { authMiddleware } from "../../middleware/auth.middleware";
+import {menuList} from "@/menu";
+import { authMiddleware } from "@/middleware/auth.middleware";
 
 @controller("/api/auth",authMiddleware)
 export class MenuController {
@@ -18,6 +18,7 @@ export class MenuController {
        })
        return res.json({
            code:200,
+           msg:'获取菜单成功',
            data:menus
        })
   }

@@ -6,7 +6,7 @@
              <el-button @click="isCollapse = !isCollapse">{{ isCollapse?'展开':'收起' }}</el-button>
              <el-button @click="toggleTheme">{{ isDark ? '浅色' : '深色' }}</el-button>
              <el-button @click="toggleFull">{{ full ? '退出全屏' : '全屏' }}</el-button>
-             <el-text>欢迎:{{ userStore.userInfo?.username }}</el-text>
+             <el-text style="color: var(--text-normal);">欢迎:{{ userStore.userInfo?.username }}</el-text>
              <el-tag>{{ userStore.userInfo?.roles?.includes('admin')?'管理员':'普通用户' }}</el-tag>
              <el-button @click=logout>退出登录</el-button>
           </div>

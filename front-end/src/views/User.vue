@@ -30,8 +30,8 @@
                   <el-space>
                       <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
                       <el-button type="warning" @click="handleReset"><el-icon><Refresh /></el-icon>重置</el-button>
-                      <el-button type="success" @click="handleAdd"><el-icon><Plus /></el-icon>新增用户</el-button>
-                      <el-button type="danger" @click="handleBatchDelete"><el-icon><Delete /></el-icon>批量删除</el-button>
+                      <el-button type="success" @click="handleAdd" v-permission="['admin']"><el-icon><Plus /></el-icon>新增用户</el-button>
+                      <el-button type="danger" @click="handleBatchDelete" v-permission="['admin']"><el-icon><Delete /></el-icon>批量删除</el-button>
                       <el-button type="info" @click="handleExportExcel"><el-icon><Download /></el-icon>导出Excel</el-button>
                   </el-space>
               </el-col>
@@ -69,8 +69,8 @@
                     </el-table-column>
                     <el-table-column label="操作" prop="operator" width="160">
                         <template #default="scope">
-                            <el-button type="primary" size="small" @click="handelEdit(scope.row)">编辑</el-button>
-                            <el-button type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
+                            <el-button v-permission="['admin']" type="primary" size="small" @click="handelEdit(scope.row)">编辑</el-button>
+                            <el-button v-permission="['admin']" type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
                         </template>
                     </el-table-column>
                     </el-table>

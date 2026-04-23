@@ -3,13 +3,14 @@ import { inject } from "inversify";
 import type { Request, Response } from "express";
 import { UserService } from "./UserService";
 import { authMiddleware } from "@/middleware/auth.middleware";
+import { roleMiddleware } from "@/middleware/role.middleware";
 import type { UserItem} from "./types";
 @controller("/api/Users",authMiddleware)
 export class UserController {
   constructor(@inject(UserService) private UserService: UserService) {}
 
   // 用户列表
-  @httpGet("/")
+  @httpGet("/", roleMiddleware(['admin','user']))
   async getUserList(req: Request, res: Response) {
     try{
       const result = await this.UserService.getUserList(req.query)
@@ -42,7 +43,7 @@ export class UserController {
     }
 
   // 创建用户
-  @httpPost("/")
+  @httpPost("/", roleMiddleware(['admin']))
   async createUser(req: Request, res: Response) {
     try {
       const data:Omit<UserItem,'id'> = req.body
@@ -58,7 +59,7 @@ export class UserController {
   }
 
    // 更新用户
-  @httpPut("/:id")
+  @httpPut("/:id", roleMiddleware(['admin']))
   async updateUser(req: Request, res: Response) {
       try {
         const result= await this.UserService.updateUser(req.body,req.params.id)
@@ -72,7 +73,7 @@ export class UserController {
   }
 
    // 删除用户
-  @httpDelete("/:id")
+  @httpDelete("/:id", roleMiddleware(['admin']))
   async deleteUser(req: Request, res: Response) {
       try {
         const result= await this.UserService.deleteUser(req.params.id)
@@ -86,7 +87,7 @@ export class UserController {
   }
 
    // 批量删除用户
-  @httpPost("/batch-delete")
+  @httpPost("/batch-delete", roleMiddleware(['admin']))
   async batchDeleteUser(req: Request, res: Response) {
       try {
         const result= await this.UserService.batchDeleteUser(req.body.ids)

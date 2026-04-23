@@ -84,7 +84,7 @@
                     </el-table-column>
                     <el-table-column label="状态" prop="status">
                         <template #default="scope">
-                            <el-tag :type="scope.row.status === 1?'success':'danger'">
+                            <el-tag style="cursor: pointer;" :type="scope.row.status === 1?'success':'danger'" @click="handleChangeStatus(scope.row)">
                             {{ scope.row.status === 1 ?'启用':'禁用' }}
                             </el-tag>
                         </template>
@@ -157,6 +157,8 @@
   import { Plus,Search,Refresh,Delete,Download } from '@element-plus/icons-vue'
   import type { FormInstance, FormRules } from 'element-plus'
   import { useExportExcel } from "@/hooks/useExportExcel";
+  import {useWriteLog} from '@/hooks/useWriteLog';
+  import { useDebounce } from "@/hooks/useDebounce";
   const {exportExcel} = useExportExcel()
 //   import { useVirtualList } from "@/hooks/useVirtualList";
  import {
@@ -166,7 +168,7 @@
       getProductListApi,
       updateProductApi,
       type ProductItem
-  } from "@/api/product"; 
+  } from "@/api/product";
 // import {createLog} from '@/api/log'
 // import { useUserStore } from "@/store/user";
 
@@ -262,8 +264,10 @@ const handleCreateOrUpdate = async(formEl: FormInstance | undefined) => {
     await formEl.validate()
     if (isEdit.value) {
         await updateProductApi(form.value)
+        await useWriteLog(`修改商品:${form.value.name}`)
     }else{
         await createProductApi(form.value)
+        await useWriteLog(`新增商品:${form.value.name}`)
     }
     getList()
     dialogVisible.value = false;
@@ -296,13 +300,12 @@ const getList = async () => {
 }
 
 //搜索
-const handleSearch = () => {
+const handleSearch = useDebounce(() => {
   pageNum.value = 1
   serchForm.value.startDate = serchForm.value.dateRange[0]
   serchForm.value.endDate = serchForm.value.dateRange[1]
-  
   getList()
-}
+})
 
 //重置
 const handleReset = () => {
@@ -318,10 +321,27 @@ const handleReset = () => {
   handleSearch()
 }
 
+const handleChangeStatus = useDebounce((row: ProductItem) => {
+  changeStatus(row)
+}, 300)
+const changeStatus = async (row:ProductItem) =>{
+    try{
+        const nextStatus = (row.status === 1 ? 0:1)
+        await updateProductApi({...row,status:nextStatus})
+        ElMessage.success(nextStatus ? '已启用' : '已禁用')
+        await useWriteLog(`${nextStatus ? '启用' : '禁用'}商品：${row.name}`)
+        getList()
+    }catch{
+        ElMessage.error('状态更新失败')
+    }
+    
+    
+}
 
 
 //删除
 const handleDelete = (row:ProductItem) => {
+    const target = tableData.value.find(item=>item.id==row.id)
     ElMessageBox.confirm(
         '确认删除该商品吗?',
         '提示',
@@ -332,6 +352,7 @@ const handleDelete = (row:ProductItem) => {
         }
       ).then(async () => {
         await deleteProductApi(row.id)
+        if(target) await useWriteLog(`删除商品:${row.name}`)
         ElMessage({
           type: 'success',
           message: '删除成功!',
@@ -343,6 +364,7 @@ const handleDelete = (row:ProductItem) => {
 //批量删除
 const handleBatchDelete = () => {
     if (!selectedIds.value.length) return ElMessage.error('请先勾选商品')
+    const selectedNames =  selectedIds.value.map(id=>tableData.value.find(item=>item.id===id)?.name).join(',')
     ElMessageBox.confirm(
         `确认删除 ${selectedIds.value.length} 个商品吗?`,
         '提示',
@@ -353,6 +375,7 @@ const handleBatchDelete = () => {
         }
       ).then(async () => {
         await batchDeleteProductApi(selectedIds.value)
+        await useWriteLog('批量删除商品'+selectedNames)
         ElMessage({
           type: 'success',
           message: '删除成功!',
@@ -388,6 +411,7 @@ const handleExportExcel = () => {
             
             '商品列表'
         )
+        await useWriteLog(`导出商品数据：${tableData.value.length}条`)
         setTimeout(()=>{
             ElMessage({
                 type: 'success',
