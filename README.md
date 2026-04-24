@@ -13,7 +13,7 @@
 
 
 ## 技术栈
-### 前端
+### 前端(front-end)
 - Vue3 + Composition API
 - TypeScript
 - Element Plus
@@ -22,7 +22,7 @@
 - Axios
 - Vite
 
-### 后端
+### 后端(back-end)
 - Node.js
 - Express
 - MySQL
